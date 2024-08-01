@@ -24,6 +24,46 @@ def get_enum_values(articulo, categoria):   #toma dos argumentos  articulo: el n
     enum_values = re.findall(r"'(.*?)'", result[1])#Esta línea utiliza una expresión regular para buscar y extraer todos los valores posibles del ENUM. La expresión regular r"'(.*?)'" busca todas las cadenas de caracteres que están entre comillas simples dentro de result[1]. re.findall devuelve una lista con todas las coincidencias encontradas.
     return enum_values#Finalmente, la función devuelve la lista de valores extraídos del ENUM.
 
+
+def get_product_code(categoria):
+    # Define rangos de códigos de producto según la categoría
+    category_ranges = {
+        'Mano de obra calificada': range(7000, 7999),
+        'Mano de obra no calificada': range(7000, 7999),
+        'Materiales': range(2002, 3001),  #pendiente
+        'Servicios domiciliarios': range(12000, 12999),
+        'Terrenos': range(10000, 10999),
+        'Edificios': range(10000, 10999),
+        'Maquinaria y Equipo': range(10000, 10999),
+        'Mantenimiento maquinaria y equipo': range(12000, 12999),
+        'Transporte': range(12000, 12999),
+        'Servicios de venta y de distribución': range(12000, 12999),
+        'Servicios de alojamiento comidas y bebidas': range(212000, 12999),
+        'Servicios financieros y conexos': range(12000, 12999),
+        'Servicios de leasing': range(12000, 12999),
+        'Servicios inmobiliarios': range(12000, 12999),
+        'Servicios prestados a las empresas y servicios de producción': range(12000, 12999),
+        'Servicios para la comunidad, sociales y personales': range(12000, 12999),
+        'Gastos imprevistos': range(11000, 11999),
+        'Adquisición de activos financieros': range(11000, 11999),
+        'Disminución de pasivos': range(11000, 11999),
+        'Impuestos, pagos de derechos, contribuciones, multas y sanciones': range(11000, 11999),
+        'Transferencias corrientes y de capital': range(11000, 11999), 
+        # Añadir más categorías y rangos según sea necesario
+    }
+    # Obtener el rango correspondiente a la categoría
+    code_range = category_ranges.get(categoria, None)
+    if code_range is None:
+        raise ValueError("Categoría no válida")
+    
+    # Buscar el siguiente código disponible en el rango
+    cursor.execute("SELECT codigo FROM articulo WHERE codigo BETWEEN %s AND %s", (code_range.start, code_range.stop))
+    used_codes = {row[0] for row in cursor.fetchall()}
+    for code in code_range:
+        if code not in used_codes:
+            return code
+    raise ValueError("No hay códigos disponibles en el rango para esta categoría")
+
 #proveedores, agregar y visualizar
 @app.route('/proveedores', methods=["GET", "POST"])
 def proveedores():
@@ -58,8 +98,13 @@ def articulo():
         iva = request.form["iva"]
         fecha = request.form["fecha"]
         proveedores = request.form["proveedores"]
-        cursor.execute("INSERT INTO articulo (nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", 
-                       (nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores))
+        try:
+            codigo = get_product_code(categoria)
+        except ValueError as e:
+            return str(e), 400
+        
+        cursor.execute("INSERT INTO articulo (codigo, nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                       (codigo, nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores))
         db.commit()
         return redirect(url_for("articulo"))
 
@@ -188,18 +233,26 @@ def mostrar_cotizacion_por_proyecto(proyecto):
 
     # Calcular el total del proyecto de forma segura
     total_proyecto = 0
+    totalP = 0
+    totalI = 0
     for item in items:
         try:
              total_proyecto += float(item[6]) + float(item[8])
+             totalP += float(item[6])
+             totalI += float(item[8])
         except (ValueError, IndexError):
             continue
+        
+   
+
+   
 
     # Obtener proyectos disponibles desde la base de datos para el dropdown
     cursor.execute('SELECT DISTINCT Proyecto FROM cotizacion')
     proyectos = cursor.fetchall()
 
     # Renderizar la plantilla con los datos obtenidos
-    return render_template('index.html', proyectos=proyectos, items=items, total_proyecto=total_proyecto, proyecto=proyecto)
+    return render_template('index.html', proyectos=proyectos, items=items, total_proyecto=total_proyecto, proyecto=proyecto, totalP=totalP, totalI=totalI)
 
 
 

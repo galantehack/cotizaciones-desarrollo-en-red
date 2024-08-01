@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filtro de Proyectos</title>
+    <title>cotizacion del proyecto</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <!-- DataTables CSS -->
@@ -14,37 +14,48 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
     <!-- DataTables Buttons JS -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <!-- JSZip for Excel export -->
     <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <!-- pdfmake for PDF export -->
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+    <!-- HTML5 export buttons -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <!-- Print export button -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+
+    
+
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">Mi Proyecto</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="/indicador">Indicador</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/articulo">Artículos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proyecto">Proyectos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/cotizacion">Cotización</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proveedores">Proveedores</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">Mi Proyecto</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="/indicador">Indicador</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/articulo">Artículos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/proyecto">Proyectos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/cotizacion">Cotización</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/proveedores">Proveedores</a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
 <div class="container">
     <form action="{{ url_for('mostrar_cotizacion') }}" method="post">
@@ -55,67 +66,136 @@
                 <option value="{{ proyecto_db[0] }}">{{ proyecto_db[0] }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Mostrar Cotización</button>
+        <button class="btn btn-primary" type="submit">Mostrar Cotización</button>
     </form>
-    </div>
-
-    
-    {% if items %}
-    <h2>Items del Proyecto</h2>
-    <table id="example" class="display table table-striped table-bordered mt-4">
-        <thead>
+</div>
+<div class="container">
+{% if items %}
+<h2>Items del Proyecto</h2>
+<table id="example" class="display table table-striped table-bordered mt-4">
+    <thead>
+        <tr>
+            <th>Indicador</th>
+            <th>Actividad</th>
+            <th>Artículo</th>
+            <th>Cantidad</th>
+            <th>Precio Unidad</th>
+            <th>Precio Total</th>
+            <th>IVA</th>
+            <th>IVA Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
             <tr>
-                <th>Indicador</th>
-                <th>Actividad</th>
-                <th>Artículo</th>
-                <th>Cantidad</th>
-                <th>Precio Unidad</th>
-                <th>Precio Total</th>
-                <th>IVA</th>
-                <th>IVA Total</th>
-              
-                
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+                <td>{{ item[5] }}</td>
+                <td>{{ item[6] }}</td>
+                <td>{{ item[7] }}</td>
+                <td>{{ item[8] }}</td>
             </tr>
-        </thead>
-         
-        <tbody>
-            {% for item in items %}
-                <tr>
-                    <td>{{ item[1] }}</td>
-                    <td>{{ item[2] }}</td>
-                    <td>{{ item[3] }}</td>
-                    <td>{{ item[4] }}</td>
-                    <td>{{ item[5] }}</td>
-                    <td>{{ item[6] }}</td>
-                    <td>{{ item[7] }}</td>
-                    <td>{{ item[8] }}</td>
-                  
-                </tr>
-            {% endfor %}
-        </tbody>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="7" style="text-align:right"></td>
+            <td>TOTAL: {{ total_proyecto }}</td>
             
-        
-           
-            
-        
-        
-    </table>
-    <h3>Total del Proyecto: <span>{{ total_proyecto }}</span></h3>
+        </tr>
+        <tr>
+            <td colspan="7" style="text-align:right"></td>
+            <td>TOTAL IVA: {{ totalI }}</td>
+        </tr>
+        <tr>
+            <td colspan="7" style="text-align:right"></td>
+            <td>TOTAL SIN IVA: {{ totalP }}</td>
+        </tr>
+    </tfoot>
+</table>
+<h3>Total del Proyecto: <span>{{ total_proyecto }}</span></h3>
+<h2>total IVA: {{ totalI }}</h2>
+<h2>total precios sin IVA: {{ totalP }}</h2>
 {% endif %}
 
+</div>
 <script>
     $(document).ready(function() {
         $('#example').DataTable({
             dom: 'Bfrtip',
             buttons: [
-                'excelHtml5',
-                'pdfHtml5'
+                {
+                    extend: 'excelHtml5',
+                    footer: true,
+                    className: 'btn-excel',
+                    text: '<i class="fas fa-file-excel"></i> Exportar Excel',
+                    customize: function (xlsx) {
+                        var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+                        // Obtener la última fila de la tabla en el archivo Excel
+                        var lastRow = $('row', sheet).last();
+
+                        // Añadir filas para TOTAL IVA y TOTAL SIN IVA después de la última fila
+                        lastRow.after(
+                            '<row><c t="inlineStr"><is><t></t></is></c><c t="inlineStr" s="51"><is><t>TOTAL IVA</t></is></c><c t="inlineStr" s="51"><is><t>{{ totalI }}</t></is></c></row>' +
+                            '<row><c t="inlineStr"><is><t></t></is></c><c t="inlineStr" s="51"><is><t>TOTAL SIN IVA</t></is></c><c t="inlineStr" s="51"><is><t>{{ totalP }}</t></is></c></row>'
+                            );
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    footer: true,
+                    className: 'btn-pdf',
+                    text: '<i class="fas fa-file-pdf"></i> Exportar PDF',
+                    customize: function (doc) {
+                        doc.content.splice(0, 0, {
+                            text: 'Detalles de cotización',
+                            style: 'header'
+                        });
+                        doc.content.splice(doc.content.length, 0, {
+                            text: 'TOTAL IVA: {{ totalI }}\nTOTAL SIN IVA: {{ totalP }}',
+                            style: 'footer'
+                        });
+                        doc.styles.tableHeader.fontSize = 10;
+                        doc.styles.tableBodyEven.alignment = 'center';
+                        doc.styles.tableBodyOdd.alignment = 'center';
+                        doc.styles.header = {
+                            fontSize: 18,
+                            bold: true,
+                            margin: [0, 0, 0, 10],
+                            alignment: 'center'
+                        };
+                        doc.styles.footer = {
+                            fontSize: 12,
+                            bold: true,
+                            margin: [0, 10, 0, 0],
+                            alignment: 'right'
+                        };
+                        doc.defaultStyle.alignment = 'center';
+                    }
+                },
+                {
+                    extend: 'print',
+                    footer: true,
+                    className: 'btn-print',
+                    text: '<i class="fas fa-print"></i> Imprimir',
+                    customize: function (win) {
+                        $(win.document.body).append(
+                            '<h3>Total del Proyecto: {{ total_proyecto }}</h3>' +
+                            '<h3>TOTAL IVA: {{ totalI }}</h3>' +
+                            '<h3>TOTAL SIN IVA: {{ totalP }}</h3>'
+                        );
+                    }
+                }
             ],
             paging: true,
             searching: true
         });
     });
 </script>
+
 
 <!-- Bootstrap JS and Popper.js -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
