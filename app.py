@@ -250,7 +250,7 @@ def cotizacion():
 
     proyecto_actual = request.args.get("proyecto_actual", "")
     
-    cursor.execute("SELECT * FROM cotizacion WHERE Proyecto = %s", (proyecto_actual,))
+    cursor.execute("SELECT * FROM cotizacion WHERE Proyecto = %s ORDER BY Indicador", (proyecto_actual,))
     cotizacion = cursor.fetchall()
     
     cursor.execute("SELECT * FROM proyecto")
