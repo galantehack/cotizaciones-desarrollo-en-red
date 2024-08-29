@@ -28,6 +28,35 @@ def get_enum_values(articulo, categoria):   #toma dos argumentos  articulo: el n
     return enum_values#Finalmente, la función devuelve la lista de valores extraídos del ENUM.
 
 
+@app.route("/subtotales", methods=["GET", "POST"]) 
+def subtotales():
+   
+
+
+    # Consulta SQL para sumar los precios por indicador de todos los proyectos
+    cursor.execute("""
+        SELECT Indicador, SUM(Precio_total) 
+        FROM cotizacion 
+        GROUP BY Indicador
+    """)
+
+    subtotales = cursor.fetchall()
+    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')  # 'es_CO.UTF-8' para Colombia
+    subtotales_formateados = [
+        (indicador, locale.currency(precio_total, grouping=True)) 
+        for indicador, precio_total in subtotales
+    ]
+    
+    print(subtotales_formateados)
+    cursor.close()
+  
+
+    return render_template("cotizacion.html", subtotales=subtotales_formateados)
+
+
+
+
+
 @app.route('/obtener_articulos', methods=['POST'])
 def obtener_articulos():
     # Obtener la categoría desde la solicitud JSON
@@ -285,6 +314,7 @@ def cotizacion():
             p.nombre = a.proveedores;
     """)
     articulos = cursor.fetchall()
+    
     locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')  # 'es_CO.UTF-8' para Colombia
     totalP = 0
     totalI = 0
@@ -303,7 +333,24 @@ def cotizacion():
     totalI= locale.currency(totalI, grouping=True)
     totalP= locale.currency(totalP, grouping=True)
     
-    return render_template('cotizacion.html', proyecto=proyecto,  articulo=articulo, cotizacion=cotizacion, total=total, proyecto_actual=proyecto_actual, totalP=totalP, totalI=totalI, articulos=articulos, categorias=categorias)
+    cursor.execute("""
+        SELECT Indicador, SUM(Precio_total) 
+        FROM cotizacion 
+        WHERE Proyecto = %s 
+        GROUP BY Indicador
+    """, (proyecto_actual,))
+
+    subtotales = cursor.fetchall()
+    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')  # 'es_CO.UTF-8' para Colombia
+    subtotales_formateados = [
+        (indicador, locale.currency(precio_total, grouping=True)) 
+        for indicador, precio_total in subtotales
+    ]
+    
+    print(subtotales_formateados)
+    
+    
+    return render_template('cotizacion.html', proyecto=proyecto,  articulo=articulo, cotizacion=cotizacion, total=total, proyecto_actual=proyecto_actual, totalP=totalP, totalI=totalI, articulos=articulos, categorias=categorias, subtotales=subtotales_formateados)
 
 
 

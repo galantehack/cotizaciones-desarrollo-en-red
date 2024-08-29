@@ -199,11 +199,27 @@
             </tbody>
         </table>
 
+
+        
+
+       
+    
         <h2>Precio Total con IVA: {{ total }}</h2>
         <h2>total IVA: {{ totalI }}</h2>
         <h2>total precios sin IVA: {{ totalP }}</h2>
+        <h2>Subtotales por Indicador</h2>
+     
+    
+    {% for subtotal in subtotales %}
+   
+        <p>{{ subtotal[0] }}</p>
+        <p>{{ subtotal[1] }}</p>
+   
+    {% endfor %}     
        
     </div>
+
+    
 
     <script>
         $(document).ready(function() {
@@ -360,6 +376,10 @@
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+
+     <!-- Nueva tabla de subtotales -->
+     
+         
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
