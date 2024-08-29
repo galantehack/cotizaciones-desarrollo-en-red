@@ -19,57 +19,80 @@
     <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">Mi Proyecto</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="/indicador">Indicador</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/articulo">Artículos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proyecto">Proyectos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/cotizacion">Cotización</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proveedores">Proveedores</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <nav  class="navbar navbar-expand-lg navbar-light">
+
+        <img src="{{ url_for('static', filename='images/Avatar.png') }}" alt="Logotipo" style="height: 40px; width: auto; margin-right: 10px;">
+    
+            <a class="navbar-brand" href="/" style="color: #C60C6F;">Mi Proyecto</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav" >
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" style="color: #177353;">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proyecto" style="color: #177353;">Proyectos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/indicador" style="color: #177353;">Indicador</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cotizacion" style="color: #177353;">Cotización</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proveedores" style="color: #177353;">Proveedores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/articulo" style="color: #177353;">Artículos</a>
+                    </li>
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </nav>
 
 
 
     <div class="container mt-1">
         <form action="/cotizacion" method="post" class="row">
+            
+            
             <div class="form-group col-12">
                 <label for="proyecto">Seleccione el proyecto</label>
                 
-                <select id="proyecto" name="Proyecto" class="form-control">
-                    <option value="">Seleccione un proyecto</option>
-                    {% for proyecto  in proyecto  %}
-                    <option  value="{{proyecto[1]}}"{% if proyecto[1] == proyecto_actual %}selected{% endif %}>{{ proyecto[1] }}</option>
-                    {% endfor %}
-                   
+                <select id="proyecto" name="Proyecto" class="form-control" onchange="actualizarProyecto()">
                     
+                    <option value="">Seleccione un proyecto</option>
+                    {% for proyecto in proyecto %}
+                    <option value="{{ proyecto[1] }}" data-proyecto_codigo="{{ proyecto[0] }}"  {% if proyecto[0] == proyecto_actual %}selected{% endif %}>
+                        {{ proyecto[1] }}
+                    </option>
+                    {% endfor %}
                 </select>
+                <input type="hidden" id="proyecto_codigo" name="proyecto_codigo">
+
             </div>
+
+           
+
+
             <div class="form-group col-6">
-                <label for="indicador">Indicador y actividad</label>
-                <select id="indicador" name="Indicador" class="form-control">
-                    <option value="">seleccione indicador</option>
-                    {% for indicador  in indicador  %}
-                    <option >{{indicador[1]}} - {{indicador[3]}} </option>
+                <label for="indicador">Indicador</label>
+                <select id="indicador" name="Indicador" class="form-control" onchange="actualizarActividad()">
+                    <option value="">Seleccione indicador</option>
+                    {% for indicador in indicador %}
+                    <option value="{{ indicador['indicador_nombre'] }}" data-actividad="{{ indicador['indicador_actividad'] }}">
+                        {{ indicador['indicador_nombre'] }} - {{ indicador['indicador_actividad'] }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -83,13 +106,27 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <div class="form-group col-8">
+                <label for="categorias">Categoría del artículo</label>
+                <select id="categorias" name="categorias" class="form-control" onchange="filtrarArticulos()">
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria }}">
+                        {{ categoria }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
         
             <div class="form-group col-6">
-                <label for="articulo">Seleccione el articulo a agregar</label>
+                <label for="articulo">Seleccione el artículo a agregar</label>
                 <select id="articulo" name="Articulo" class="form-control" onchange="actualizarPrecio()">
-                    <option value="">Seleccione un articulo</option>
-                    {% for articulo in articulo %}
-                    <option  data-price="{{ articulo[5] }}" data-iva="{{ articulo[6] }}" >{{ articulo[1] }}</option>
+                    <option value="">Seleccione un artículo</option>
+                    {% for articulo in articulos %}
+                    <option value="{{ articulo[0] }}" data-price="{{ articulo[5] }}" data-iva="{{ articulo[6] }}">
+                        {{ articulo[1] }} - {{ articulo[2] }} ({{ articulo[3] }})
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -117,7 +154,7 @@
                 <input id="iva_total" name="iva_total" type="number" placeholder="0" class="form-control" readonly>
             </div>
             
-            <button type="submit" class="btn btn-primary col-2">Agregar +</button> 
+            <button type="submit" class="col-2" style="background-color: #177353; color: #ffffff;">Agregar +</button> 
             
             
         </form>
@@ -125,6 +162,7 @@
         <table id="example" class="display table table-striped table-bordered">
             <thead>
                 <tr>
+                    <th>Codido</th>
                     <th>Proyecto</th>
                     <th>Indicador</th>
                     <th>Actividad</th>
@@ -141,6 +179,7 @@
             <tbody>
                 {% for cot in cotizacion %}
                 <tr>
+                    <td>{{ cot[9] }}</td>
                     <td>{{ cot[0] }}</td>
                     <td>{{ cot[1] }}</td>
                     <td>{{ cot[2] }}</td>
@@ -151,7 +190,10 @@
                     <td>{{ cot[7] }}</td>
                     <td>{{ cot[8] }}</td>
                     
-                    <td><a href="/borrar_cotizacion/{{ cot[0] }}">Borrar</a></td>
+                    <td> 
+                       
+                  
+                    </td>
                 </tr>  
                 {% endfor %}
             </tbody>
@@ -208,8 +250,111 @@
         }
 
         document.getElementById('cantidad').addEventListener('input', actualizarPrecioTotal);
+
+        
+      
+    </script>
+    <script>
+        function actualizarProyecto() {
+            const proyecto = document.getElementById('proyecto');
+            const proyecto_codigo = proyecto.selectedOptions[0].getAttribute('data-proyecto_codigo');
+            const indicador = document.getElementById('indicador');
+            
+            // Actualizar el campo oculto con el proyecto seleccionado
+            document.getElementById('proyecto_codigo').value = proyecto_codigo;
+        
+            // Realiza una solicitud al servidor para obtener los indicadores asociados al proyecto seleccionado
+            fetch(`/llenar_indicador?proyecto_actual=${proyecto.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar el select de indicadores
+                    indicador.innerHTML = '<option value="">Seleccione indicador</option>';
+                    
+                    // Rellenar el select con las nuevas opciones
+                    data.forEach(opcion => {
+                        const option = document.createElement('option');
+                        option.value = opcion.indicador_nombre; // Cambiado para almacenar el nombre
+                        option.text = `${opcion.indicador_nombre} - ${opcion.indicador_actividad}`;
+                        option.setAttribute('data-actividad', opcion.indicador_actividad);
+                        indicador.appendChild(option);
+                    });
+        
+                    // Limpiar la lista de actividades al cambiar de proyecto
+                    document.getElementById('actividad').innerHTML = '<option value="">Seleccione una actividad</option>';
+                })
+                .catch(error => console.error('Error al cargar los indicadores:', error));
+        }
+        function obtenerNombreIndicador() {
+            const indicador = document.getElementById('indicador');
+            const indicador_nombre = indicador.value; // Obtiene el nombre del indicador seleccionado
+            console.log('Nombre del Indicador Seleccionado:', indicador_nombre);
+        }
+        
+    
+        function actualizarActividad() {
+            const indicador = document.getElementById('indicador');
+            const actividad = document.getElementById('actividad');
+    
+            // Limpiar la lista de actividades al cambiar de indicador
+            actividad.innerHTML = '<option value="">Seleccione una actividad</option>';
+    
+            indicador.addEventListener('change', function() {
+                const indicador_id = indicador.value;
+    
+                if (indicador_id) {
+                    // Obtener la actividad asociada al indicador seleccionado
+                    const actividad_data = indicador.selectedOptions[0].getAttribute('data-actividad');
+                    
+                    // Limpiar el select de actividades
+                    actividad.innerHTML = '<option value="">Seleccione actividad</option>';
+                    
+                    // Agregar la actividad obtenida
+                    const option = document.createElement('option');
+                    option.value = actividad_data;
+                    option.text = actividad_data;
+                    actividad.appendChild(option);
+                }
+            });
+        }
+    
+        // Inicializar la página con las funciones cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarActividad();
+            actualizarProyecto();  // Llama también a actualizarProyecto para inicializar el proyecto seleccionado
+        });
+        
     </script>
 
+    <script>
+        function filtrarArticulos() {
+            var categoria = document.getElementById("categorias").value;
+            
+            fetch("{{ url_for('obtener_articulos') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    
+                },
+                body: JSON.stringify({ categoria: categoria })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var articuloSelect = document.getElementById("articulo");
+                articuloSelect.innerHTML = '<option value="">Seleccione un artículo</option>'; // Limpiar el select de artículos
+            
+                data.forEach(function(articulo) {
+                    var option = document.createElement("option");
+                    option.value = articulo[1]; // Código del artículo
+                    option.dataset.price = articulo[5]; // Precio
+                    option.dataset.iva = articulo[6]; // IVA
+                    option.textContent = `${articulo[1]} - ${articulo[2]} (${articulo[3]})`; // Nombre, descripción, categoría
+                    articuloSelect.appendChild(option);
+                });
+            });
+        }
+        
+    </script>
+    
 
 
     <!-- Bootstrap JS and Popper.js -->

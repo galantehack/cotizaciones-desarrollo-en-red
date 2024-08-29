@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CATEGORIA</title>
+    <title>INDICADOR</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- jQuery -->
@@ -19,44 +19,60 @@
     <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">Mi Proyecto</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="/indicador">Indicador</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/articulo">Artículos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proyecto">Proyectos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/cotizacion">Cotización</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/proveedores">Proveedores</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <nav  class="navbar navbar-expand-lg navbar-light">
+
+        <img src="{{ url_for('static', filename='images/Avatar.png') }}" alt="Logotipo" style="height: 40px; width: auto; margin-right: 10px;">
+    
+            <a class="navbar-brand" href="/" style="color: #C60C6F;">Mi Proyecto</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav" >
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" style="color: #177353;">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proyecto" style="color: #177353;">Proyectos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/indicador" style="color: #177353;">Indicador</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cotizacion" style="color: #177353;">Cotización</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proveedores" style="color: #177353;">Proveedores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/articulo" style="color: #177353;">Artículos</a>
+                    </li>
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </nav>
 
 
 
     <div class="container mt-1">
         <form action="/indicador" method="post" class="row">
-            <div class="form-group col-6">
+            <div class="form-group col-2" >
+                <label for="codigo">Código del proyecto</label>
+                <input id="codigo" name="proyecto_codigo" type="text" class="form-control" placeholder="BPIN">
+            </div>
+            <div class="form-group col-5">
                 <label for="indicador_nombre">indicador</label>
                 <input id="indicador_nombre" name="indicador_nombre" type="text" class="form-control" placeholder="indicador">
             </div>
-            <div class="form-group  col-6">
+            <div class="form-group  col-5">
                 <label for="indicador_actividad">actividad</label>
                 <input id="indicador_actividad" name="indicador_actividad" type="text" class="form-control" placeholder="actividad">
             </div>
@@ -64,7 +80,7 @@
                 <label for="indicador_descripcion">Descripción de indicador</label>
                 <textarea id="indicador_descripcion" name="indicador_descripcion" class="form-control" placeholder="Ingresa tu descripción"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary col-2">Agregar +</button>
+            <button type="submit" class="col-2" style="background-color: #177353; color: #ffffff;">Agregar +</button>
         </form>
         <br>
 
@@ -85,7 +101,9 @@
                     <td>{{ indicador[1] }}</td>
                     <td>{{ indicador[3] }}</td>
                     <td>{{ indicador[2] }}</td>
-                    <td><a href="/borrar_indicador/{{indicador.0}}">Borrar</a> </td>
+                    <td> 
+                       
+                    </td>
                 </tr>
                 {% endfor %}  
             </tbody>

@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import re
+import locale # poner los valores en pesos colombianos  
 import mysql.connector
+from datetime import datetime
+from flask_wtf import CSRFProtect
 app = Flask(__name__)
 
 
@@ -25,44 +28,110 @@ def get_enum_values(articulo, categoria):   #toma dos argumentos  articulo: el n
     return enum_values#Finalmente, la función devuelve la lista de valores extraídos del ENUM.
 
 
-def get_product_code(categoria):
-    # Define rangos de códigos de producto según la categoría
-    category_ranges = {
-        'Mano de obra calificada': range(7000, 7999),
-        'Mano de obra no calificada': range(7000, 7999),
-        'Materiales': range(2002, 3001),  #pendiente
-        'Servicios domiciliarios': range(12000, 12999),
-        'Terrenos': range(10000, 10999),
-        'Edificios': range(10000, 10999),
-        'Maquinaria y Equipo': range(10000, 10999),
-        'Mantenimiento maquinaria y equipo': range(12000, 12999),
-        'Transporte': range(12000, 12999),
-        'Servicios de venta y de distribución': range(12000, 12999),
-        'Servicios de alojamiento comidas y bebidas': range(212000, 12999),
-        'Servicios financieros y conexos': range(12000, 12999),
-        'Servicios de leasing': range(12000, 12999),
-        'Servicios inmobiliarios': range(12000, 12999),
-        'Servicios prestados a las empresas y servicios de producción': range(12000, 12999),
-        'Servicios para la comunidad, sociales y personales': range(12000, 12999),
-        'Gastos imprevistos': range(11000, 11999),
-        'Adquisición de activos financieros': range(11000, 11999),
-        'Disminución de pasivos': range(11000, 11999),
-        'Impuestos, pagos de derechos, contribuciones, multas y sanciones': range(11000, 11999),
-        'Transferencias corrientes y de capital': range(11000, 11999), 
-        # Añadir más categorías y rangos según sea necesario
-    }
-    # Obtener el rango correspondiente a la categoría
-    code_range = category_ranges.get(categoria, None)
-    if code_range is None:
-        raise ValueError("Categoría no válida")
+@app.route('/obtener_articulos', methods=['POST'])
+def obtener_articulos():
+    # Obtener la categoría desde la solicitud JSON
+    data = request.get_json()
+    categoria = data.get('categoria')
+
+    # Validar la categoría
+    if not categoria:
+        return jsonify([])  # Retornar una lista vacía si no se proporciona una categoría
+
+    # Obtener los artículos que pertenecen a la categoría seleccionada
+    cursor.execute("""
+        SELECT * FROM articulo WHERE categoria = %s
+    """, (categoria,))
+    articulos = cursor.fetchall()
+
+    # Convertir los artículos en formato JSON
+    return jsonify(articulos)
+
+
+@app.route('/llenar_indicador', methods=["GET", "POST"])
+def llenar_indicador():
+    proyecto_actual = request.args.get("proyecto_actual", "")  # Asegúrate de que contiene el nombre del proyecto
+    print(f"Nombre del proyecto actual: {proyecto_actual}")
+
+    cursor.execute("""
+        SELECT 
+            i.id AS indicador_id,
+            i.indicador_nombre,
+            i.indicador_descripcion,
+            i.indicador_actividad,
+            p.proyecto_codigo
+          
+        FROM 
+            proyecto p
+        JOIN 
+            indicador i ON p.proyecto_codigo = i.proyecto_codigo
+        WHERE 
+            p.proyecto_nombre = %s
+    """, (proyecto_actual,))
     
-    # Buscar el siguiente código disponible en el rango
-    cursor.execute("SELECT codigo FROM articulo WHERE codigo BETWEEN %s AND %s", (code_range.start, code_range.stop))
-    used_codes = {row[0] for row in cursor.fetchall()}
-    for code in code_range:
-        if code not in used_codes:
-            return code
-    raise ValueError("No hay códigos disponibles en el rango para esta categoría")
+    indicadores = cursor.fetchall()
+    print(indicadores)  # Verificar si hay resultados
+    
+    # Convertir los resultados a una lista de diccionarios
+    resultado = []
+    for indicador in indicadores:
+        resultado.append({
+            'indicador_id': indicador[0],
+            'indicador_nombre': indicador[1],
+            'indicador_descripcion': indicador[2],
+            'indicador_actividad': indicador[3],
+            'proyecto_codigo': indicador[4]
+            
+        })
+    
+    # Devolver los resultados en formato JSON
+    return jsonify(resultado)
+
+
+@app.route("/llenar_actividad", methods=["GET", "POST"])
+def llenar_actividad():
+    indicador_id = request.args.get("indicador_id", "")  # Asegúrate de que contiene el nombre del proyecto
+    print(f"Nombre del proyecto actual: {indicador_id}")
+
+    cursor.execute("""
+        SELECT 
+            i.indicador_actividad
+        FROM 
+            indicador i
+        WHERE 
+            i.id = %s
+        """, (indicador_id,))
+    actividad = cursor.fetchone()
+    if actividad:
+        return jsonify({
+            'indicador_actividad': actividad[0]
+        })
+    else:
+        return jsonify({'indicador_actividad': ''})
+    
+
+        
+
+
+@app.route('/dashboard', methods=["GET", "POST"])
+def dashboard():
+     # Obtener la fecha y hora actual
+      current_time = datetime.now().strftime("%H:%M:%S")
+      current_date = datetime.now().strftime("%Y-%m-%d")
+      cursor.execute("SELECT COUNT(*)  FROM  articulo ")
+      cantidadArticulo = cursor.fetchone()[0]
+      cursor.execute("SELECT COUNT(*)  FROM  proveedores ")
+      cantidadProveedores = cursor.fetchone()[0]
+      cursor.execute("SELECT COUNT(*)  FROM  proyecto ")
+      cantidadProyectos = cursor.fetchone()[0]
+      cursor.execute("SELECT COUNT(*)  FROM  cotizacion ")
+      cantidadCotizaciones = cursor.fetchone()[0]
+      
+      return render_template("dashboard.html", time=current_time, date=current_date, cantidadArticulo=cantidadArticulo, cantidadProveedores=cantidadProveedores, cantidadProyectos=cantidadProyectos, cantidadCotizaciones=cantidadCotizaciones  )
+
+  
+   
+   # return render_template('dashboard.html')
 
 #proveedores, agregar y visualizar
 @app.route('/proveedores', methods=["GET", "POST"])
@@ -98,13 +167,10 @@ def articulo():
         iva = request.form["iva"]
         fecha = request.form["fecha"]
         proveedores = request.form["proveedores"]
-        try:
-            codigo = get_product_code(categoria)
-        except ValueError as e:
-            return str(e), 400
+       
         
         cursor.execute("INSERT INTO articulo (codigo, nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
-                       (codigo, nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores))
+                       ( nombre, descripcion, categoria, unidad_medida, precio, iva, fecha, proveedores))
         db.commit()
         return redirect(url_for("articulo"))
 
@@ -141,8 +207,9 @@ def indicador():
         indicador_nombre = request.form["indicador_nombre"]
         indicador_descripcion = request.form["indicador_descripcion"]
         indicador_actividad = request.form["indicador_actividad"]
-        cursor.execute("INSERT INTO indicador (indicador_nombre, indicador_descripcion, indicador_actividad) VALUES (%s, %s, %s)", 
-                       (indicador_nombre, indicador_descripcion, indicador_actividad))
+        proyecto_codigo = request.form["proyecto_codigo"]
+        cursor.execute("INSERT INTO indicador (indicador_nombre, indicador_descripcion, indicador_actividad,proyecto_codigo) VALUES (%s, %s, %s, %s)", 
+                       (indicador_nombre, indicador_descripcion, indicador_actividad, proyecto_codigo))
         db.commit()
         return redirect(url_for("indicador"))
 
@@ -154,6 +221,7 @@ def indicador():
 #cotizacion
 @app.route('/cotizacion', methods=["GET", "POST"])
 def cotizacion():
+    categorias = get_enum_values("articulo", "categoria")
     if request.method == "POST":
         Proyecto = request.form.get("Proyecto")
         Indicador = request.form.get("Indicador")
@@ -162,6 +230,7 @@ def cotizacion():
         Cantidad = request.form.get("Cantidad")
         Precio_unidad = request.form.get("Precio_unidad")
         iva = request.form.get("iva")
+        proyecto_codigo = request.form.get("proyecto_codigo")
 
         # Manejar valores vacíos
         try:
@@ -174,21 +243,49 @@ def cotizacion():
         Precio_total = Cantidad * Precio_unidad
         iva_total = Cantidad * iva
 
-        cursor.execute("INSERT INTO cotizacion (Proyecto, Indicador, Actividad, Articulo, Cantidad, Precio_unidad, Precio_total, iva, iva_total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                       (Proyecto, Indicador, Actividad, Articulo, Cantidad, Precio_unidad, Precio_total, iva, iva_total))
+        cursor.execute("INSERT INTO cotizacion (Proyecto, Indicador, Actividad, Articulo, Cantidad, Precio_unidad, Precio_total, iva, iva_total, proyecto_codigo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                       (Proyecto, Indicador, Actividad, Articulo, Cantidad, Precio_unidad, Precio_total, iva, iva_total,  proyecto_codigo, ))
         db.commit()
         return redirect(url_for("cotizacion", proyecto_actual=Proyecto))
 
     proyecto_actual = request.args.get("proyecto_actual", "")
+    
     cursor.execute("SELECT * FROM cotizacion WHERE Proyecto = %s", (proyecto_actual,))
     cotizacion = cursor.fetchall()
+    
     cursor.execute("SELECT * FROM proyecto")
     proyecto = cursor.fetchall()
-    cursor.execute("SELECT * FROM indicador")
-    indicador = cursor.fetchall()
+    
+    
+    
     cursor.execute("SELECT * FROM articulo")
     articulo = cursor.fetchall()
-
+    
+    cursor.execute("""
+        SELECT 
+            p.nit,
+            p.nombre AS proveedor_nombre,
+            p.telefono,
+            p.correo,
+            p.ubicacion AS ciudad,
+            p.fecha AS proveedor_fecha,
+            a.codigo,
+            a.nombre AS articulo_nombre,
+            a.descripcion,
+            a.categoria,
+            a.unidad_medida,
+            a.precio,
+            a.iva,
+            a.fecha AS articulo_fecha
+        FROM 
+            proveedores p
+        JOIN 
+            articulo a 
+        ON 
+            p.nombre = a.proveedores;
+    """)
+    articulos = cursor.fetchall()
+    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')  # 'es_CO.UTF-8' para Colombia
     totalP = 0
     totalI = 0
 
@@ -197,14 +294,16 @@ def cotizacion():
         try:
             totalP += float(item[6])
             totalI += float(item[8])
+            
         except (ValueError, IndexError):
             continue
 
     total = totalP + totalI
-
-    return render_template('cotizacion.html', proyecto=proyecto, indicador=indicador, articulo=articulo, cotizacion=cotizacion, total=total, proyecto_actual=proyecto_actual, totalP=totalP, totalI=totalI)
-
-
+    total = locale.currency(total, grouping=True)
+    totalI= locale.currency(totalI, grouping=True)
+    totalP= locale.currency(totalP, grouping=True)
+    
+    return render_template('cotizacion.html', proyecto=proyecto,  articulo=articulo, cotizacion=cotizacion, total=total, proyecto_actual=proyecto_actual, totalP=totalP, totalI=totalI, articulos=articulos, categorias=categorias)
 
 
 
@@ -232,6 +331,7 @@ def mostrar_cotizacion_por_proyecto(proyecto):
     items = cursor.fetchall()
 
     # Calcular el total del proyecto de forma segura
+    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')  # 'es_CO.UTF-8' para Colombia # Calcular totalP y totalI de forma segura
     total_proyecto = 0
     totalP = 0
     totalI = 0
@@ -243,9 +343,9 @@ def mostrar_cotizacion_por_proyecto(proyecto):
         except (ValueError, IndexError):
             continue
         
-   
-
-   
+    total_proyecto = locale.currency(total_proyecto, grouping=True)
+    totalI= locale.currency(totalI, grouping=True)
+    totalP= locale.currency(totalP, grouping=True)
 
     # Obtener proyectos disponibles desde la base de datos para el dropdown
     cursor.execute('SELECT DISTINCT Proyecto FROM cotizacion')
